@@ -1,0 +1,11 @@
+domain,reason
+paypal-alerts-update.com,Known credential harvesting domain
+secure-login-attempt.xyz,Phishing landing page
+account-update-portal-auth.net,Financial scam domain
+quickpay-portal-login.net,Payroll scam site
+m1crosoft-office.com,Typo impersonation of Microsoft
+coll3ge-help.com,Credential theft portal
+stateunlv-portal.biz,Fake university portal
+verify-banking-security.org,Banking trojan distribution
+free-crypto-rewards.online,Cryptocurrency fraud
+urgent-tax-refund.info,IRS impersonation

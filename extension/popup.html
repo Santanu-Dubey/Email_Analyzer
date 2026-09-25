@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishGuard URL Scanner</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Popup-specific container overrides */
+    body {
+      width: 380px;
+      min-height: 480px;
+      margin: 0;
+      padding: 16px;
+      background-color: #0F172A;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="phishguard-popup">
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="popup-brand">
+        <span class="popup-logo">🛡️</span>
+        <div>
+          <div class="popup-title">PhishGuard</div>
+          <div class="popup-subtitle">Threat Intelligence Scanner</div>
+        </div>
+      </div>
+      <div id="backend-status" class="status-pill status-checking" title="Backend Server Status">
+        <span class="status-dot"></span> <span id="status-text">Checking...</span>
+      </div>
+    </div>
+
+    <!-- URL Scanner Card -->
+    <div class="popup-card">
+      <label class="popup-label" for="url-input">Inspect Target URL or Domain</label>
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="url-input" 
+          placeholder="e.g. http://m1crosoft-login.com/auth" 
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="btn-paste" class="btn-secondary" title="Paste from clipboard">📋</button>
+      </div>
+
+      <!-- Quick demo test buttons for hackathon presentation -->
+      <div class="quick-samples">
+        <span class="quick-label">Try demo link:</span>
+        <button class="sample-chip" data-url="https://google.com">google.com</button>
+        <button class="sample-chip chip-warn" data-url="http://bit.ly/secure-login">bit.ly Shortener</button>
+        <button class="sample-chip chip-danger" data-url="http://paypa1-update.com/verify">paypa1 Spoof</button>
+      </div>
+
+      <button id="btn-scan-url" class="btn-primary">
+        <span id="scan-icon">🔍</span>
+        <span id="scan-btn-text">Scan URL for Threats</span>
+      </button>
+    </div>
+
+    <!-- Loading State Indicator -->
+    <div id="loading-spinner" class="popup-loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Running threat heuristics & lookalike detection...</p>
+    </div>
+
+    <!-- Error Banner -->
+    <div id="popup-error" class="popup-error-card" style="display: none;">
+      <div class="error-header">
+        <span>⚠️ Connection Error</span>
+      </div>
+      <div id="error-message" class="error-text">
+        Backend offline. Ensure <code>python api_server.py</code> is running.
+      </div>
+    </div>
+
+    <!-- Scan Results Card -->
+    <div id="result-card" class="popup-result-card" style="display: none;">
+      <div class="result-header">
+        <div>
+          <div id="result-status" class="result-verdict">SAFE</div>
+          <div id="result-domain" class="result-domain">example.com</div>
+        </div>
+        <div id="result-score-pill" class="result-score-pill">Score: 0/100</div>
+      </div>
+
+      <div class="result-body">
+        <div class="result-section">
+          <div class="result-section-label">💡 Security Analysis</div>
+          <div id="result-summary" class="result-summary-text">...</div>
+          <div id="result-recommendation" class="result-recommendation-box">...</div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-section-label">🚩 Flagged Indicators</div>
+          <div id="result-reasons" class="result-reasons-list">
+            <!-- Reasons populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <span>Gmail Live Scan Enabled</span>
+      <a href="http://localhost:8501" target="_blank" class="footer-link">Open SOC Dashboard ↗</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

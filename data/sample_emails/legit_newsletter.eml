@@ -1,0 +1,26 @@
+From: "Tech Weekly Digest" <newsletter@techweekly.com>
+Reply-To: newsletter@techweekly.com
+To: subscriber@gmail.com
+Subject: Tech Weekly #142: Breakthroughs in Quantum Computing & AI
+Date: Wed, 17 Sep 2026 14:15:00 +0000
+Authentication-Results: mx.google.com; spf=pass smtp.mailfrom=newsletter@techweekly.com; dkim=pass header.i=@techweekly.com; dmarc=pass header.from=techweekly.com
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>Tech Weekly #142</title></head>
+<body>
+  <h1>Tech Weekly Digest</h1>
+  <p>Hello Tech Enthusiast,</p>
+  <p>Welcome to this week's roundup of technology news and developer insights.</p>
+  <ul>
+    <li><a href="https://techweekly.com/articles/quantum-computing-advances">Quantum Computing milestone announced</a></li>
+    <li><a href="https://techweekly.com/articles/scalable-microservices-patterns">Architecture patterns for cloud scale</a></li>
+    <li><a href="https://techweekly.com/articles/open-source-spotlight">Open source projects to watch this autumn</a></li>
+  </ul>
+  <p>Read the full issue at <a href="https://techweekly.com">https://techweekly.com</a>.</p>
+  <hr>
+  <p style="font-size:12px; color:#666;">You received this because you subscribed to Tech Weekly. <a href="https://techweekly.com/unsubscribe">Unsubscribe</a></p>
+</body>
+</html>

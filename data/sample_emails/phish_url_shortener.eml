@@ -1,0 +1,23 @@
+From: "Microsoft 365 Admin Center" <admin@m1crosoft-office.com>
+Reply-To: admin-verify365@protonmail.com
+To: employee@stateuniv.edu
+Subject: URGENT: Microsoft 365 Mailbox Storage Quota Exceeded - Action Required
+Date: Thu, 25 Sep 2026 02:10:00 +0000
+Authentication-Results: mx.google.com; spf=none; dkim=fail; dmarc=none
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>Mailbox Storage Warning</title></head>
+<body>
+  <h3>Microsoft 365 Security Alert</h3>
+  <p>Dear User,</p>
+  <p>Your mailbox storage has reached 99.8% capacity. All incoming messages will be suspended immediately unless you increase your storage capacity.</p>
+  <p>Please upgrade your storage allocation via our portal link below:</p>
+  <p><a href="http://bit.ly/m365-urgent-update">http://bit.ly/m365-urgent-update</a></p>
+  <p>Backup server access: <a href="http://192.168.1.100/admin-login">http://192.168.1.100/admin-login</a></p>
+  <p>Failure to respond immediately will result in complete incoming mail termination.</p>
+  <p>Microsoft 365 System Administrator</p>
+</body>
+</html>

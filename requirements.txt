@@ -1,0 +1,7 @@
+streamlit
+beautifulsoup4
+pandas
+google-generativeai
+python-dotenv
+fastapi
+uvicorn

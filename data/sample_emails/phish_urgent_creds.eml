@@ -1,0 +1,21 @@
+From: "Global Payroll & Benefits" <notifications@quickpay-portal-login.net>
+Reply-To: payroll-queries@yahoo.com
+To: employee@stateuniv.edu
+Subject: Immediate Action Required: Payroll Direct Deposit Failure - Update Credentials
+Date: Tue, 23 Sep 2026 11:45:00 +0000
+Authentication-Results: mx.google.com; spf=fail smtp.mailfrom=quickpay-portal-login.net; dkim=fail header.i=@quickpay-portal-login.net; dmarc=fail (p=NONE) header.from=quickpay-portal-login.net
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>Direct Deposit Alert</title></head>
+<body>
+  <p>Dear Customer,</p>
+  <p>We encountered a critical routing error while processing your upcoming direct deposit payment.</p>
+  <p>To avoid payroll disruption and account suspension, you must re-verify your banking password and credential details within 24 hours.</p>
+  <p><a href="http://quickpay-portal-login.net/update-banking">Click here to re-authorize your direct deposit information immediately</a></p>
+  <p>Failure to respond immediately will delay all pending disbursements.</p>
+  <p>Automated Payroll Services</p>
+</body>
+</html>

@@ -1,0 +1,22 @@
+From: "Campus IT Security Helpdesk" <security@stateunlv.edu>
+Reply-To: stateunivhelpdesk247@gmail.com
+To: student@stateuniv.edu
+Subject: URGENT ACTION REQUIRED: Verify Your Campus Account Credentials Immediately
+Date: Mon, 22 Sep 2026 08:12:00 +0000
+Authentication-Results: mx.google.com; spf=none; dkim=none; dmarc=none
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>Account Verification Required</title></head>
+<body>
+  <p>Dear Student,</p>
+  <p><strong>URGENT SECURITY ALERT:</strong> We detected multiple unauthorized login attempts to your student portal from an unrecognized device.</p>
+  <p>Your access will be permanently suspended within 24 hours unless you verify your identity immediately.</p>
+  <p>Click the link below to confirm your password and preserve access:</p>
+  <p><a href="http://stateunlv-portal.biz/login">https://stateuniv.edu/verify-identity</a></p>
+  <p>Failure to complete this verification immediately will result in complete account deactivation.</p>
+  <p>State University IT Support</p>
+</body>
+</html>

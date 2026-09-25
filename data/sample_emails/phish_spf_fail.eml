@@ -1,0 +1,22 @@
+From: "PayPal Account Security" <service@paypal-alerts-update.com>
+Reply-To: service@paypal-alerts-update.com
+To: user@example.com
+Subject: Notice: Suspicious Login Detected - Action Required
+Date: Wed, 24 Sep 2026 16:20:00 +0000
+Authentication-Results: mx.google.com; spf=fail (google.com: domain of service@paypal-alerts-update.com does not designate permitted IP) smtp.mailfrom=service@paypal-alerts-update.com; dkim=fail; dmarc=fail action=none header.from=paypal-alerts-update.com
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>PayPal Security Notification</title></head>
+<body>
+  <h2>PayPal Security Center</h2>
+  <p>Dear User,</p>
+  <p>An unauthorized login attempt was detected on your account from an unrecognized IP address (Moscow, Russia).</p>
+  <p>Your account access has been temporarily restricted. To restore full privileges, please confirm your identity immediately:</p>
+  <p><a href="http://paypal-alerts-update.com/restore-access">https://www.paypal.com/security/restore</a></p>
+  <p>If you do not complete this step within 24 hours, your account will be permanently locked.</p>
+  <p>Thank you,<br>PayPal Security Team</p>
+</body>
+</html>

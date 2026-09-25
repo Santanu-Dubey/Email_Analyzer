@@ -1,0 +1,22 @@
+From: "Office of the Registrar" <registrar@stateuniv.edu>
+Reply-To: registrar@stateuniv.edu
+To: student@stateuniv.edu
+Subject: Fall 2026 Course Registration & Academic Calendar
+Date: Mon, 15 Sep 2026 09:30:00 +0000
+Authentication-Results: mx.google.com; spf=pass (google.com: domain of registrar@stateuniv.edu designates 198.51.100.1 as permitted sender) smtp.mailfrom=registrar@stateuniv.edu; dkim=pass header.i=@stateuniv.edu; dmarc=pass (p=REJECT) header.from=stateuniv.edu
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html>
+<head><title>Course Registration Notice</title></head>
+<body>
+  <h2>State University Academic Notice</h2>
+  <p>Dear Jane Doe,</p>
+  <p>The course catalog for the upcoming semester is now officially published. You may review course listings, prerequisite requirements, and your designated enrollment window online.</p>
+  <p>Please log in to your official student portal to prepare your schedule worksheet:</p>
+  <p><a href="https://stateuniv.edu/courses">https://stateuniv.edu/courses</a></p>
+  <p>If you have academic advising questions, please contact your department coordinator.</p>
+  <p>Warm regards,<br>Office of the University Registrar<br>State University</p>
+</body>
+</html>
