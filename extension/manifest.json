@@ -5,10 +5,18 @@
   "description": "Real-time explainable email phishing and URL threat analyzer for Gmail.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "identity"
   ],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/gmail.readonly"
+    ]
+  },
   "host_permissions": [
     "https://mail.google.com/*",
+    "https://gmail.googleapis.com/*",
     "http://localhost:8000/*",
     "http://127.0.0.1:8000/*"
   ],

@@ -148,3 +148,81 @@ def parse_eml(file_input) -> dict:
         "reply_to_domain": extract_domain(msg.get("Reply-To", "")),
         "display_name": extract_display_name(msg.get("From", ""))
     }
+
+def parse_raw_bytes(raw_bytes: bytes) -> dict:
+    """
+    Parse raw RFC 5322 email bytes (e.g. from Gmail API format=raw).
+    Returns a structured dictionary with headers, decoded body, URLs, HTML links,
+    and authentication results, with identical schema to parse_eml().
+    """
+    if isinstance(raw_bytes, str):
+        raw_bytes = raw_bytes.encode("utf-8", errors="ignore")
+    elif not isinstance(raw_bytes, (bytes, bytearray)):
+        raise ValueError(f"Unsupported input type for parse_raw_bytes: {type(raw_bytes)}")
+
+    msg = message_from_bytes(raw_bytes, policy=policy.default)
+
+    body = ""
+    html_content = ""
+    plain_content = ""
+
+    if msg.is_multipart():
+        for part in msg.walk():
+            ctype = part.get_content_type()
+            try:
+                part_content = part.get_content()
+            except Exception:
+                payload = part.get_payload(decode=True)
+                part_content = payload.decode(errors="ignore") if payload else ""
+
+            if ctype == "text/plain" and isinstance(part_content, str):
+                plain_content += part_content + "\n"
+            elif ctype == "text/html" and isinstance(part_content, str):
+                html_content += part_content + "\n"
+                soup = BeautifulSoup(part_content, "html.parser")
+                body += soup.get_text(separator=" ", strip=True) + "\n"
+    else:
+        ctype = msg.get_content_type()
+        try:
+            content = msg.get_content()
+        except Exception:
+            payload = msg.get_payload(decode=True)
+            content = payload.decode(errors="ignore") if payload else ""
+
+        if ctype == "text/html" and isinstance(content, str):
+            html_content = content
+            soup = BeautifulSoup(content, "html.parser")
+            body = soup.get_text(separator=" ", strip=True)
+        elif isinstance(content, str):
+            plain_content = content
+            body = content
+
+    if not body.strip() and plain_content.strip():
+        body = plain_content.strip()
+
+    # URL extraction: both regex over text body and extracted hrefs
+    urls_found = set(re.findall(r'https?://[^\s"\'<>]+', body + " " + html_content + " " + plain_content))
+    html_links = extract_href_pairs(msg)
+    for link in html_links:
+        href = link.get("href", "").strip()
+        if href.startswith("http://") or href.startswith("https://"):
+            urls_found.add(href)
+
+    return {
+        "from": str(msg.get("From", "") or "").strip(),
+        "reply_to": str(msg.get("Reply-To", "") or "").strip(),
+        "to": str(msg.get("To", "") or "").strip(),
+        "subject": str(msg.get("Subject", "") or "").strip(),
+        "date": str(msg.get("Date", "") or "").strip(),
+        "auth_results": str(msg.get("Authentication-Results", "") or "").strip(),
+        "received": msg.get_all("Received", []) or [],
+        "body": body.strip(),
+        "plain_content": plain_content.strip(),
+        "html_content": html_content.strip(),
+        "urls": sorted(list(urls_found)),
+        "html_links": html_links,
+        "from_domain": extract_domain(str(msg.get("From", "") or "")),
+        "reply_to_domain": extract_domain(str(msg.get("Reply-To", "") or "")),
+        "display_name": extract_display_name(str(msg.get("From", "") or ""))
+    }
+

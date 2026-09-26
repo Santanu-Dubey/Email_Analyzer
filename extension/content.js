@@ -3,16 +3,17 @@
  * PhishGuard — Gmail Content Script (Manifest V3)
  * ===========================================================================
  * 
+ * DUAL SCAN ARCHITECTURE:
+ * 1. Primary: Fetches raw RFC 5322 email bytes via Gmail REST API
+ *    (/gmail/v1/users/me/messages/<id>?format=raw) using OAuth2 tokens.
+ *    Provides real SPF, DKIM, and DMARC cryptographic header verification.
+ * 2. Fallback: Automatically falls back to DOM scraping (/scan-email) if OAuth,
+ *    network, permissions, or Gmail API requests fail for any reason.
+ * 
  * HOW TO INSPECT & UPDATE GMAIL SELECTORS IF GMAIL UPDATES ITS UI:
  * 1. Open Gmail (mail.google.com) and click to open any email.
- * 2. Right-click on the Subject, Sender name, or Body text, and choose "Inspect".
- * 3. In the Elements tab of DevTools:
- *    - Subject is typically inside an <h2> element (look for class "hP" or role).
- *    - Sender is typically a <span> with class "gD" and an attribute like email="name@domain.com".
- *    - Body text is inside a <div> with class "a3s" or "aiL".
- *    - Toolbar is the row of icons above the email with class "G-tF" or role="toolbar".
- * 4. If Google modifies any class names, simply add the new selector to the 
- *    corresponding fallback array below.
+ * 2. Right-click on Subject, Sender, or Body and click "Inspect".
+ * 3. Update the SELECTORS configuration below as needed.
  * ===========================================================================
  */
 
@@ -22,7 +23,7 @@
   console.log('[PhishGuard] Content script initialized on Gmail.');
 
   // Configuration
-  const API_BASE_URL = 'http://localhost:8000';
+  const API_BASE_URL = 'http://127.0.0.1:8000';
   const POLL_INTERVAL_MS = 1500;
   const BUTTON_ID = 'phishguard-scan-btn';
   const BADGE_ID = 'phishguard-result-badge';
@@ -157,6 +158,164 @@
   }
 
   // -------------------------------------------------------------------------
+  // GMAIL MESSAGE ID EXTRACTION
+  // -------------------------------------------------------------------------
+
+  /**
+   * Extracts the currently open Gmail message or thread ID from the URL hash.
+   * 
+   * NOTE FOR USERS / DEVELOPERS:
+   * Gmail URL structures can vary based on account indices (/u/0/, /u/1/), custom views,
+   * search queries, and categories.
+   * Typical URL hash formats:
+   *   - Standard Inbox:  https://mail.google.com/mail/u/0/#inbox/<messageId>
+   *   - All Mail:        https://mail.google.com/mail/u/0/#all/<messageId>
+   *   - Sent Items:      https://mail.google.com/mail/u/0/#sent/<messageId>
+   *   - Search Results:  https://mail.google.com/mail/u/0/#search/<query>/<messageId>
+   *   - Custom Labels:   https://mail.google.com/mail/u/0/#label/<labelName>/<messageId>
+   * If your live Gmail URL pattern differs, verify `window.location.hash` in DevTools.
+   * 
+   * @returns {string|null} Hex/alphanumeric Gmail message ID or null
+   */
+  function extractGmailMessageId() {
+    const hash = window.location.hash || '';
+    if (!hash) return null;
+
+    // Pattern 1: Match after known Gmail standard views (#inbox/<id>, #all/<id>, #sent/<id>, #spam/<id>, etc.)
+    const folderMatch = hash.match(/#(?:inbox|sent|starred|snoozed|drafts|imp|spam|trash|all|category\/[^\/]+)\/([a-zA-Z0-9_-]+)/i);
+    if (folderMatch && folderMatch[1]) {
+      return folderMatch[1];
+    }
+
+    // Pattern 2: Match after search/label nested paths (#search/query/<id> or #label/name/<id>)
+    const searchOrLabelMatch = hash.match(/#(?:search|label)\/(?:.+)\/([a-zA-Z0-9_-]+)/i);
+    if (searchOrLabelMatch && searchOrLabelMatch[1]) {
+      return searchOrLabelMatch[1];
+    }
+
+    // Pattern 3: General fallback — match any hash path ending in a 12+ char hex/alphanumeric ID
+    const generalIdMatch = hash.match(/#(?:.*\/)?([a-zA-Z0-9_-]{12,})/i);
+    if (generalIdMatch && generalIdMatch[1]) {
+      const candidate = generalIdMatch[1];
+      const ignored = ['inbox', 'sent', 'starred', 'drafts', 'imp', 'trash', 'spam', 'all', 'settings'];
+      if (!ignored.includes(candidate.toLowerCase())) {
+        return candidate;
+      }
+    }
+
+    // Pattern 4: Last segment of the hash if separated by slash
+    const segments = hash.replace(/^#\/?/, '').split('/');
+    if (segments.length > 1) {
+      const last = segments[segments.length - 1];
+      if (last && last.length >= 8) {
+        return last;
+      }
+    }
+
+    // Pattern 5: DOM Fallback for legacy thread/message ID attribute
+    try {
+      const messageEl = document.querySelector('[data-message-id], [data-legacy-message-id], [data-thread-perm-id]');
+      if (messageEl) {
+        const domId = messageEl.getAttribute('data-message-id') ||
+                      messageEl.getAttribute('data-legacy-message-id') ||
+                      messageEl.getAttribute('data-thread-perm-id');
+        if (domId) {
+          return domId.replace(/^#/, '');
+        }
+      }
+    } catch (e) {
+      // Ignore DOM query errors
+    }
+
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
+  // GMAIL API & OAUTH TOKEN ACQUISITION
+  // -------------------------------------------------------------------------
+
+  /**
+   * Retrieves an OAuth 2.0 access token with gmail.readonly scope.
+   * Works in Manifest V3 via background service worker delegation or direct API if available.
+   * @param {boolean} interactive - Whether to prompt the user if unauthenticated
+   * @returns {Promise<string>} OAuth access token
+   */
+  async function getAuthToken(interactive = true) {
+    // If chrome.identity is directly accessible in current scope:
+    if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getAuthToken) {
+      return new Promise((resolve, reject) => {
+        chrome.identity.getAuthToken({ interactive }, (token) => {
+          if (chrome.runtime.lastError || !token) {
+            reject(new Error(chrome.runtime.lastError ? chrome.runtime.lastError.message : 'No OAuth token returned'));
+          } else {
+            resolve(token);
+          }
+        });
+      });
+    }
+
+    // In MV3 content scripts, delegate token request to background service worker
+    return new Promise((resolve, reject) => {
+      if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+        return reject(new Error('chrome.runtime messaging is unavailable'));
+      }
+      chrome.runtime.sendMessage({ action: 'GET_AUTH_TOKEN', interactive }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (response && response.success && response.token) {
+          resolve(response.token);
+        } else {
+          reject(new Error(response?.error || 'Failed to acquire OAuth token from background service worker'));
+        }
+      });
+    });
+  }
+
+  /**
+   * Fetches raw RFC 5322 email string (base64url encoded) from Gmail REST API.
+   * @param {string} messageId - The Gmail message ID
+   * @param {string} token - The OAuth access token
+   * @returns {Promise<string>} Base64url raw string
+   */
+  async function fetchGmailRawEmail(messageId, token) {
+    const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?format=raw`;
+
+    // Try direct fetch from content script first
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.raw) {
+          return data.raw;
+        }
+        throw new Error('Gmail API response did not contain "raw" field');
+      }
+    } catch (directErr) {
+      console.warn('[PhishGuard] Direct Gmail API fetch failed, trying background service worker proxy...', directErr);
+    }
+
+    // Delegate to background service worker proxy
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ action: 'FETCH_GMAIL_RAW', messageId, token }, (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (response && response.success && response.data && response.data.raw) {
+          resolve(response.data.raw);
+        } else {
+          reject(new Error(response?.error || `Failed to fetch raw message for ID ${messageId}`));
+        }
+      });
+    });
+  }
+
+  // -------------------------------------------------------------------------
   // SCAN BUTTON INJECTION & LIFECYCLE
   // -------------------------------------------------------------------------
 
@@ -211,11 +370,14 @@
   }
 
   // -------------------------------------------------------------------------
-  // SCANNING ACTION & BACKEND API CALL
+  // SCANNING ACTION WITH AUTOMATIC FALLBACK
   // -------------------------------------------------------------------------
 
   /**
    * Handles user click on "Scan for Phishing" button.
+   * 1. Attempts the Gmail API path (/scan-raw with full RFC 5322 headers).
+   * 2. If ANY error occurs (auth, network, missing message ID, API error),
+   *    silently falls back to the DOM scraping path (/scan-email).
    */
   async function handleScanClick(e) {
     if (e) e.preventDefault();
@@ -231,39 +393,82 @@
         btn.innerHTML = `<span class="phishguard-spinner"></span> Scanning...`;
       }
 
-      // Extract live DOM email data
+      // Always extract DOM data for fallback and context display
       const emailData = extractEmailData();
       lastScannedSubject = emailData.subject;
 
-      console.log('[PhishGuard] Sending email payload to backend:', {
-        sender: emailData.sender,
-        subject: emailData.subject,
-        body_length: emailData.body.length,
-        links_count: emailData.links.length
-      });
+      let scanResult = null;
+      let scanMethod = 'DOM'; // 'API' | 'DOM'
 
-      // Call PhishGuard FastAPI backend
-      const response = await fetch(`${API_BASE_URL}/scan-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailData)
-      });
+      // =====================================================================
+      // STEP 1: ATTEMPT GMAIL API (FULL RFC 5322 RAW HEADERS) PATH
+      // =====================================================================
+      try {
+        const messageId = extractGmailMessageId();
+        if (!messageId) {
+          throw new Error('Could not identify Gmail message ID from URL hash or DOM');
+        }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server returned HTTP ${response.status}: ${errorText}`);
+        console.log('[PhishGuard] Trying Gmail API path for message ID:', messageId);
+        const authToken = await getAuthToken(true);
+        console.log('[PhishGuard] Acquired OAuth token, fetching raw message from Gmail API...');
+
+        const rawB64 = await fetchGmailRawEmail(messageId, authToken);
+        console.log('[PhishGuard] Successfully fetched raw email bytes, sending to /scan-raw...');
+
+        const apiResponse = await fetch(`${API_BASE_URL}/scan-raw`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ raw: rawB64 })
+        });
+
+        if (!apiResponse.ok) {
+          const errText = await apiResponse.text();
+          throw new Error(`Backend /scan-raw returned HTTP ${apiResponse.status}: ${errText}`);
+        }
+
+        scanResult = await apiResponse.json();
+        scanMethod = 'API';
+        console.log('[PhishGuard] Gmail API raw scan succeeded:', scanResult);
+
+      } catch (apiErr) {
+        // ===================================================================
+        // STEP 2: AUTOMATIC FALLBACK TO DOM SCRAPING PATH
+        // ===================================================================
+        console.warn('[PhishGuard] Gmail API path failed, falling back to DOM scraping:', apiErr.message || apiErr);
+
+        console.log('[PhishGuard] Executing DOM fallback: Sending scraped payload to /scan-email...', {
+          sender: emailData.sender,
+          subject: emailData.subject,
+          body_length: emailData.body.length,
+          links_count: emailData.links.length
+        });
+
+        const domResponse = await fetch(`${API_BASE_URL}/scan-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(emailData)
+        });
+
+        if (!domResponse.ok) {
+          const errorText = await domResponse.text();
+          throw new Error(`Backend /scan-email returned HTTP ${domResponse.status}: ${errorText}`);
+        }
+
+        scanResult = await domResponse.json();
+        scanMethod = 'DOM';
+        console.log('[PhishGuard] Fallback DOM scan succeeded:', scanResult);
       }
 
-      const scanResult = await response.json();
-      console.log('[PhishGuard] Received scan result:', scanResult);
-
-      // Render rich forensic result badge
-      renderResultBadge(scanResult, emailData);
+      // Render rich forensic result badge with scan method indicator
+      renderResultBadge(scanResult, emailData, scanMethod);
 
     } catch (err) {
-      console.error('[PhishGuard] Scan failed:', err);
+      console.error('[PhishGuard] All scan methods failed:', err);
       renderErrorBadge(err);
     } finally {
       currentScanning = false;
@@ -280,8 +485,11 @@
 
   /**
    * Renders the interactive, color-coded forensic result card.
+   * @param {object} result - Backend analysis result
+   * @param {object} emailData - Extracted DOM metadata
+   * @param {string} scanMethod - 'API' or 'DOM'
    */
-  function renderResultBadge(result, emailData) {
+  function renderResultBadge(result, emailData, scanMethod = 'DOM') {
     removeResultBadge();
 
     const badge = document.createElement('div');
@@ -337,16 +545,37 @@
       )
       .join('');
 
+    // Method indicator UI badge and footer text
+    const isApiScan = scanMethod === 'API';
+    const methodBadgeHtml = isApiScan
+      ? `<div class="phishguard-method-tag tag-api" title="Scanned via Gmail API with full cryptographic RFC 5322 header forensics (SPF, DKIM, DMARC)">
+          <span class="phishguard-method-dot">●</span> via Gmail API (full header analysis)
+        </div>`
+      : `<div class="phishguard-method-tag tag-dom" title="Scanned via page DOM scraper. SPF/DKIM/DMARC headers are unavailable in the browser DOM view.">
+          <span class="phishguard-method-dot">○</span> via page scan (headers unavailable)
+        </div>`;
+
+    const methodFooterHtml = isApiScan
+      ? `<span>⚡ via Gmail API (full header analysis)</span>`
+      : `<span>⚡ via page scan (headers unavailable)</span>`;
+
+    const senderDisplay = result.meta?.sender || emailData.sender || 'Sender';
+    const linksCount = result.meta?.links_scanned ?? emailData.links.length;
+
     badge.innerHTML = `
       <div class="phishguard-card-header">
         <div class="phishguard-title-group">
           <span class="phishguard-badge-icon">${statusIcon}</span>
           <div>
             <div class="phishguard-badge-title">PhishGuard Forensics</div>
-            <div class="phishguard-badge-subtitle">${escapeHtml(emailData.sender || 'Sender')}</div>
+            <div class="phishguard-badge-subtitle">${escapeHtml(senderDisplay)}</div>
           </div>
         </div>
         <button class="phishguard-close-btn" id="phishguard-close-btn" title="Close Panel">✕</button>
+      </div>
+
+      <div class="phishguard-method-row">
+        ${methodBadgeHtml}
       </div>
 
       <div class="phishguard-score-banner ${statusThemeClass}">
@@ -383,8 +612,8 @@
       </div>
 
       <div class="phishguard-footer">
-        <span>🔗 ${emailData.links.length} Link(s) Inspected</span>
-        <span>⚡ ${escapeHtml(result.explanation?.source || 'PhishGuard AI')}</span>
+        ${methodFooterHtml}
+        <span>🔗 ${linksCount} Link(s) Inspected</span>
       </div>
     `;
 

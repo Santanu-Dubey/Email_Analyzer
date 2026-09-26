@@ -4,6 +4,7 @@ Provides REST APIs for live email scanning and standalone URL threat analysis,
 wrapping the existing PhishGuard detection engine without altering its core logic.
 """
 
+import base64
 import os
 import re
 from typing import List, Union, Optional, Dict, Any
@@ -52,6 +53,10 @@ class EmailScanRequest(BaseModel):
 
 class UrlScanRequest(BaseModel):
     url: str = Field(..., description="Target URL to inspect for phishing/spoofing threats")
+
+class RawEmailScanRequest(BaseModel):
+    raw: str = Field(..., description="Base64url-encoded RFC 5322 raw email string from Gmail API")
+
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +199,84 @@ def scan_email(request: EmailScanRequest):
 
 
 # ---------------------------------------------------------------------------
+# Raw Email Scanning Endpoint (Gmail API format=raw)
+# ---------------------------------------------------------------------------
+
+@app.post("/scan-raw")
+def scan_raw_email(request: RawEmailScanRequest):
+    """
+    Accepts base64url-encoded raw RFC 5322 email data fetched via Gmail API
+    (/gmail/v1/users/me/messages/{id}?format=raw), decodes and parses all
+    cryptographic headers (SPF/DKIM/DMARC), and executes the PhishGuard
+    scoring and explainability engines.
+    """
+    try:
+        raw_b64 = request.raw.strip()
+        if not raw_b64:
+            raise HTTPException(status_code=400, detail="Raw email content cannot be empty.")
+
+        # Validate base64url character set
+        if not re.match(r'^[A-Za-z0-9_-]+={0,2}$', raw_b64):
+            raise HTTPException(status_code=400, detail="Invalid base64url characters in payload.")
+
+        # Safe base64url decode with automatic padding correction
+        padding_needed = (-len(raw_b64)) % 4
+        padded_b64 = raw_b64 + ("=" * padding_needed)
+        raw_bytes = base64.urlsafe_b64decode(padded_b64)
+
+        if not raw_bytes:
+            raise HTTPException(status_code=400, detail="Decoded email byte stream is empty.")
+
+        # Parse raw RFC 5322 bytes into standard parsed dictionary
+        parsed = parser.parse_raw_bytes(raw_bytes)
+
+        # Run through existing scoring engine (zero modification to engine logic)
+        score_result = scorer.score_email(parsed)
+
+        # Generate explainability (Gemini AI with deterministic rule fallback)
+        explanation_data = explainer.explain(
+            score_result.get("evidence", []),
+            score_result.get("classification", "Safe"),
+            parsed
+        )
+
+        # Compile plain reasons list
+        flagged_items = score_result.get("flagged", [])
+        reasons = [f.get("explanation", "") for f in flagged_items if f.get("explanation")]
+        if not reasons and score_result.get("classification") == "Safe":
+            reasons = ["Email passed all cryptographic authentication (SPF/DKIM/DMARC), domain reputation, and content heuristics."]
+
+        return {
+            "risk": score_result.get("risk_level", "LOW"),
+            "status": score_result.get("classification", "Safe"),
+            "score": score_result.get("score", 0),
+            "color": score_result.get("color", "#10B981"),
+            "reasons": reasons,
+            "flagged": flagged_items,
+            "category_scores": score_result.get("category_scores", {}),
+            "explanation": {
+                "summary": explanation_data.get("summary", ""),
+                "recommendation": explanation_data.get("recommendation", ""),
+                "source": explanation_data.get("source", "Heuristic Engine")
+            },
+            "meta": {
+                "sender": parsed.get("from", ""),
+                "display_name": parsed.get("display_name", ""),
+                "from_domain": parsed.get("from_domain", ""),
+                "subject": parsed.get("subject", ""),
+                "links_scanned": len(parsed.get("urls", [])),
+                "auth_headers_available": bool(parsed.get("auth_results")),
+                "scan_mode": "Gmail API RFC 5322 Raw Scan"
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to decode or parse raw email: {str(e)}")
+
+
+
+# ---------------------------------------------------------------------------
 # Standalone URL Scanning Endpoint
 # ---------------------------------------------------------------------------
 
@@ -332,4 +415,4 @@ def scan_url(request: UrlScanRequest):
 
 if __name__ == "__main__":
     print("Starting PhishGuard API Server on http://127.0.0.1:8000 ...")
-    uvicorn.run("api_server:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("api_server:app", host="0.0.0.0", port=8000, reload=True)
