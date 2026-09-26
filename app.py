@@ -15,55 +15,303 @@ st.set_page_config(
 # Custom CSS for rich dark cyber-defense aesthetics
 st.markdown("""
 <style>
-    /* Main container styling */
+    /* Global Font & Background Styling */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Main App Header */
+    .phishguard-hero {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 20px 24px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 16px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .phishguard-hero-icon {
+        font-size: 42px;
+        line-height: 1;
+        filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+    }
     .main-header {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%);
+        background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #A5B4FC 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
+        margin: 0;
+        letter-spacing: -0.5px;
     }
     .sub-header {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         color: #94A3B8;
-        margin-bottom: 1.5rem;
+        margin-top: 4px;
+        margin-bottom: 0;
     }
-    .card {
+
+    /* Primary Action Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        transition: all 0.2s ease !important;
+    }
+    .stButton > button:hover {
+        background: linear-gradient(135deg, #4338CA 0%, #6D28D9 100%) !important;
+        box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Download Buttons */
+    .stDownloadButton > button {
+        background: #1E293B !important;
+        color: #E2E8F0 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    .stDownloadButton > button:hover {
+        background: #334155 !important;
+        color: #FFFFFF !important;
+        border-color: #64748B !important;
+    }
+
+    /* File Uploader Container */
+    [data-testid="stFileUploader"] {
+        background: #111C33;
+        border: 2px dashed rgba(99, 102, 241, 0.4);
+        border-radius: 14px;
+        padding: 16px 20px;
+        transition: all 0.2s ease;
+    }
+    [data-testid="stFileUploader"]:hover {
+        border-color: #818CF8;
+        background: #14213D;
+    }
+
+    /* Prominent Result Banner Card */
+    .result-banner {
         background: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-radius: 14px;
+        padding: 18px 22px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.6rem;
-        border-radius: 9999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-right: 0.4rem;
+    .result-banner-phishing {
+        border-left: 6px solid #EF4444;
+        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.3);
     }
-    .badge-safe { background-color: rgba(16, 185, 129, 0.2); color: #10B981; border: 1px solid #10B981; }
-    .badge-suspicious { background-color: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid #F59E0B; }
-    .badge-phish { background-color: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444; }
-    .evidence-item {
+    .result-banner-suspicious {
+        border-left: 6px solid #F59E0B;
+        box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15), 0 0 0 1px rgba(245, 158, 11, 0.3);
+    }
+    .result-banner-safe {
+        border-left: 6px solid #10B981;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12), 0 0 0 1px rgba(16, 185, 129, 0.3);
+    }
+
+    .result-banner-left {
+        flex: 1;
+        overflow: hidden;
+    }
+    .result-header-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .result-icon {
+        font-size: 22px;
+    }
+    .result-filename {
+        margin: 0;
+        color: #F8FAFC;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+    }
+    .result-meta-row {
+        color: #94A3B8;
+        font-size: 0.88rem;
+        margin-top: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+    .result-meta-row code {
         background: #0F172A;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #CBD5E1;
+        font-size: 0.82rem;
+    }
+    .meta-separator {
+        color: #475569;
+    }
+
+    .result-banner-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-left: 16px;
+    }
+    .result-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .badge-safe {
+        background: rgba(16, 185, 129, 0.18);
+        color: #34D399;
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+    .badge-suspicious {
+        background: rgba(245, 158, 11, 0.18);
+        color: #FBBF24;
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+    }
+    .badge-phish {
+        background: rgba(239, 68, 68, 0.18);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.45);
+        text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+
+    .result-score-chip {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #0F172A;
+        padding: 6px 12px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+    }
+    .score-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748B;
+        letter-spacing: 0.5px;
+    }
+    .score-val {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #F8FAFC;
+        line-height: 1;
+    }
+    .score-denom {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        font-weight: 600;
+    }
+
+    /* Evidence Items with Category Accent */
+    .evidence-item {
+        background: #111C33;
         border-left: 4px solid #EF4444;
-        padding: 0.75rem 1rem;
-        margin: 0.5rem 0;
-        border-radius: 0 8px 8px 0;
+        padding: 10px 14px;
+        margin: 8px 0;
+        border-radius: 0 10px 10px 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-left-width: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     .evidence-pass {
-        background: #0F172A;
+        background: #111C33;
         border-left: 4px solid #10B981;
-        padding: 0.5rem 1rem;
-        margin: 0.3rem 0;
-        border-radius: 0 8px 8px 0;
+        padding: 9px 14px;
+        margin: 6px 0;
+        border-radius: 0 10px 10px 0;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-left-width: 4px;
+    }
+    .evidence-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .evidence-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #F1F5F9;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .evidence-pts-badge {
+        font-size: 0.75rem;
+        font-weight: 800;
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.45);
+        color: #FCA5A5;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+    .evidence-desc {
+        color: #CBD5E1;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    /* Dashboard KPI Card Styling */
+    .kpi-card {
+        background: #1E293B;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        text-align: center;
+    }
+    .kpi-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94A3B8;
+        letter-spacing: 0.5px;
+    }
+    .kpi-value {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #F8FAFC;
+        margin-top: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
+
+def get_check_icon(check_name: str) -> str:
+    """Returns a relevant security icon for scannable evidence categorization."""
+    c = str(check_name).lower()
+    if any(k in c for k in ["spf", "dkim", "dmarc", "auth"]):
+        return "🔒"
+    elif any(k in c for k in ["from", "reply-to", "display", "impersonation", "brand", "lookalike", "typosquat"]):
+        return "👤"
+    elif any(k in c for k in ["url", "shortener", "ip-address", "href", "link", "blocklist", "allowlist"]):
+        return "🔗"
+    elif any(k in c for k in ["urgency", "pressure", "credential", "threat", "greeting", "salutation"]):
+        return "⚠️"
+    return "🛡️"
 
 SAMPLE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "sample_emails")
 
@@ -131,8 +379,15 @@ with st.sidebar:
         """)
 
 # Header
-st.markdown('<div class="main-header">🛡️ PhishGuard — Explainable Email Analyzer</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Inspect raw <code>.eml</code> messages, uncover spoofing vectors, and examine transparent evidence breakdowns.</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="phishguard-hero">
+    <div class="phishguard-hero-icon">🛡️</div>
+    <div>
+        <div class="main-header">PhishGuard Security Intelligence</div>
+        <div class="sub-header">Explainable email forensics, cryptographic header verification & real-time phishing detection.</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Tabs
 tab_analyze, tab_dashboard = st.tabs(["🔍 Analyze & Forensics", "📊 SOC Metrics & Aggregate Dashboard"])
@@ -180,30 +435,41 @@ with tab_analyze:
             passed = res["passed"]
 
             # Visual header banner
+            banner_theme = "result-banner-safe"
             if classification == "Phishing":
+                banner_theme = "result-banner-phishing"
                 badge_class = "badge-phish"
                 header_icon = "🚨"
             elif classification == "Suspicious":
+                banner_theme = "result-banner-suspicious"
                 badge_class = "badge-suspicious"
                 header_icon = "⚠️"
             else:
                 badge_class = "badge-safe"
-                header_icon = "✅"
+                header_icon = "🛡️"
 
             with st.container():
                 st.markdown(f"""
-                <div style="background:#1E293B; border-radius:12px; padding:1.2rem; border-left: 6px solid {color}; margin-bottom:1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="margin:0; color:#F8FAFC;">{header_icon} {fname}</h3>
-                        <div>
-                            <span class="badge {badge_class}">{classification.upper()}</span>
-                            <span style="font-weight:700; color:#CBD5E1; font-size:1.1rem;">Score: {score}/100</span>
+                <div class="result-banner {banner_theme}">
+                    <div class="result-banner-left">
+                        <div class="result-header-row">
+                            <span class="result-icon">{header_icon}</span>
+                            <h3 class="result-filename">{fname}</h3>
+                        </div>
+                        <div class="result-meta-row">
+                            <span><strong>Subject:</strong> {parsed.get('subject') or '(No Subject)'}</span>
+                            <span class="meta-separator">•</span>
+                            <span><strong>From:</strong> <code>{parsed.get('from')}</code></span>
                         </div>
                     </div>
-                    <p style="color:#94A3B8; margin-top:0.4rem; margin-bottom:0.2rem;">
-                        <strong>Subject:</strong> {parsed.get('subject') or '(No Subject)'} | 
-                        <strong>From:</strong> <code>{parsed.get('from')}</code>
-                    </p>
+                    <div class="result-banner-right">
+                        <span class="result-badge {badge_class}">{classification.upper()}</span>
+                        <div class="result-score-chip">
+                            <span class="score-label">Threat Score</span>
+                            <span class="score-val">{score}</span>
+                            <span class="score-denom">/100</span>
+                        </div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -214,17 +480,18 @@ with tab_analyze:
                     st.markdown("#### 💡 Explainable AI Analysis & Guidance")
                     st.info(f"**Explanation:** {explanation['summary']}\n\n**🛡️ Recommended Action:** {explanation['recommendation']}\n\n*Source: {explanation.get('source', 'Engine')}*")
 
-                    # Flagged evidence
+                    # Flagged evidence with category icons
                     st.markdown(f"#### ⚠️ Triggered Threat Indicators ({len(flagged)})")
                     if flagged:
                         for f in flagged:
+                            cat_icon = get_check_icon(f['check'])
                             st.markdown(f"""
                             <div class="evidence-item">
-                                <div style="display:flex; justify-content:space-between;">
-                                    <strong>{f['check']}</strong>
-                                    <span style="color:#EF4444; font-weight:bold;">+{f['weight']} pts</span>
+                                <div class="evidence-top">
+                                    <div class="evidence-name"><span>{cat_icon}</span> <strong>{f['check']}</strong></div>
+                                    <span class="evidence-pts-badge">+{f['weight']} pts</span>
                                 </div>
-                                <div style="color:#CBD5E1; font-size:0.9rem; margin-top:0.2rem;">{f['explanation']}</div>
+                                <div class="evidence-desc">{f['explanation']}</div>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
@@ -269,9 +536,14 @@ with tab_analyze:
                     tab_passed, tab_body = st.tabs(["Passed Checks", "Extracted Email Body"])
                     with tab_passed:
                         for p in passed:
+                            cat_icon = get_check_icon(p['check'])
                             st.markdown(f"""
                             <div class="evidence-pass">
-                                <span style="color:#10B981;">✔ <strong>{p['check']}</strong></span>: {p['explanation']}
+                                <div class="evidence-top">
+                                    <div class="evidence-name"><span style="color:#10B981;">✔</span> <span>{cat_icon}</span> <strong>{p['check']}</strong></div>
+                                    <span style="font-size:0.75rem; color:#10B981; font-weight:700;">PASS</span>
+                                </div>
+                                <div class="evidence-desc">{p['explanation']}</div>
                             </div>
                             """, unsafe_allow_html=True)
                     with tab_body:
@@ -330,11 +602,43 @@ with tab_dashboard:
         avg_score = sum(r["score"] for r in results) / total_scanned
 
         m1, m2, m3, m4, m5 = st.columns(5)
-        m1.metric("Total Scanned", total_scanned)
-        m2.metric("Phishing Detected", phish_count, delta=f"{(phish_count/total_scanned)*100:.0f}%", delta_color="inverse")
-        m3.metric("Suspicious", suspicious_count)
-        m4.metric("Safe / Legitimate", safe_count)
-        m5.metric("Avg Threat Score", f"{avg_score:.1f}/100")
+        with m1:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-title">Total Scanned</div>
+                <div class="kpi-value">{total_scanned}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m2:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #EF4444;">
+                <div class="kpi-title" style="color:#FCA5A5;">Phishing Detected</div>
+                <div class="kpi-value" style="color:#EF4444;">{phish_count} <span style="font-size:0.85rem; color:#94A3B8;">({(phish_count/total_scanned)*100:.0f}%)</span></div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m3:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #F59E0B;">
+                <div class="kpi-title" style="color:#FCD34D;">Suspicious</div>
+                <div class="kpi-value" style="color:#F59E0B;">{suspicious_count}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m4:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #10B981;">
+                <div class="kpi-title" style="color:#6EE7B7;">Safe / Legitimate</div>
+                <div class="kpi-value" style="color:#10B981;">{safe_count}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with m5:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #6366F1;">
+                <div class="kpi-title" style="color:#A5B4FC;">Avg Threat Score</div>
+                <div class="kpi-value" style="color:#818CF8;">{avg_score:.1f}<span style="font-size:0.85rem; color:#94A3B8;">/100</span></div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 
         col_d1, col_d2 = st.columns(2)
 
@@ -357,3 +661,4 @@ with tab_dashboard:
 
         st.markdown("#### 📑 Batch Audit Log")
         st.dataframe(df, use_container_width=True)
+

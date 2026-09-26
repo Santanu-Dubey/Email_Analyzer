@@ -67,57 +67,88 @@
 }
 
 /* ---------------------------------------------------------------------------
- * 2. INJECTED GMAIL FLOATING RESULT BADGE
+ * 2. INJECTED GMAIL FLOATING RESULT BADGE (High-End Cyber-Defense UI)
  * --------------------------------------------------------------------------- */
 
 .phishguard-badge {
   position: fixed !important;
   top: 75px !important;
   right: 25px !important;
-  width: 380px !important;
-  max-width: 90vw !important;
-  max-height: 85vh !important;
+  width: 390px !important;
+  max-width: 92vw !important;
+  max-height: 86vh !important;
   overflow-y: auto !important;
-  background: #0F172A !important;
-  border-radius: 14px !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(180deg, #0F172A 0%, #111C33 100%) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
   color: #F8FAFC !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  padding: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif !important;
+  padding: 18px !important;
   z-index: 2147483647 !important; /* Always on top of Gmail modals */
-  animation: phishguard-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: phishguard-slide-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
   box-sizing: border-box !important;
+  backdrop-filter: blur(12px) !important;
 }
 
 @keyframes phishguard-slide-in {
   from {
     opacity: 0;
-    transform: translateX(30px) scale(0.95);
+    transform: translateX(25px) translateY(-6px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0) translateY(0) scale(1);
   }
 }
 
-/* Classification Borders */
+@keyframes phishguard-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(25px) scale(0.96);
+  }
+}
+
+.phishguard-badge-closing {
+  animation: phishguard-slide-out 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+/* Custom Scrollbar */
+.phishguard-badge::-webkit-scrollbar {
+  width: 5px;
+}
+
+.phishguard-badge::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phishguard-badge::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+/* Classification Borders & Ambient Glow */
 .phishguard-badge-phishing {
   border-left: 5px solid #EF4444 !important;
-  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25), 0 0 0 1px rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(239, 68, 68, 0.35), 0 0 30px rgba(239, 68, 68, 0.12) !important;
 }
 
 .phishguard-badge-suspicious {
   border-left: 5px solid #F59E0B !important;
-  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(245, 158, 11, 0.35), 0 0 30px rgba(245, 158, 11, 0.12) !important;
 }
 
 .phishguard-badge-safe {
   border-left: 5px solid #10B981 !important;
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(16, 185, 129, 0.35), 0 0 30px rgba(16, 185, 129, 0.1) !important;
 }
 
 .phishguard-badge-error {
   border-left: 5px solid #E11D48 !important;
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(225, 29, 72, 0.35) !important;
 }
 
 /* Header */
@@ -126,8 +157,8 @@
   align-items: center !important;
   justify-content: space-between !important;
   margin-bottom: 12px !important;
-  padding-bottom: 10px !important;
-  border-bottom: 1px solid #334155 !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .phishguard-title-group {
@@ -135,16 +166,22 @@
   align-items: center !important;
   gap: 10px !important;
   overflow: hidden !important;
+  flex: 1 !important;
+}
+
+.phishguard-header-text {
+  overflow: hidden !important;
 }
 
 .phishguard-badge-icon {
-  font-size: 20px !important;
+  font-size: 22px !important;
+  flex-shrink: 0 !important;
 }
 
 .phishguard-badge-title {
   font-size: 15px !important;
   font-weight: 700 !important;
-  color: #F1F5F9 !important;
+  color: #F8FAFC !important;
   letter-spacing: -0.2px !important;
 }
 
@@ -154,29 +191,38 @@
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 240px !important;
+  max-width: 260px !important;
+  margin-top: 1px !important;
 }
 
 .phishguard-close-btn {
-  background: transparent !important;
-  border: none !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #94A3B8 !important;
-  font-size: 16px !important;
+  font-size: 13px !important;
   cursor: pointer !important;
-  padding: 4px 8px !important;
-  border-radius: 6px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   line-height: 1 !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  flex-shrink: 0 !important;
+  margin-left: 8px !important;
 }
 
 .phishguard-close-btn:hover {
-  background: #334155 !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
   color: #FFFFFF !important;
+  transform: scale(1.06) !important;
 }
 
 /* Method Indicator Pill */
 .phishguard-method-row {
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
   display: flex !important;
   align-items: center !important;
 }
@@ -187,7 +233,7 @@
   gap: 5px !important;
   font-size: 10.5px !important;
   font-weight: 600 !important;
-  padding: 3px 8px !important;
+  padding: 3px 9px !important;
   border-radius: 6px !important;
   letter-spacing: 0.2px !important;
 }
@@ -210,145 +256,259 @@
 
 /* Verdict & Score Banner */
 .phishguard-score-banner {
-  border-radius: 8px !important;
-  padding: 10px 12px !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
 }
 
 .status-phish {
-  background: rgba(239, 68, 68, 0.15) !important;
-  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
 }
 
 .status-suspicious {
-  background: rgba(245, 158, 11, 0.15) !important;
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
 }
 
 .status-safe {
-  background: rgba(16, 185, 129, 0.15) !important;
-  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+.phishguard-verdict-col {
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .phishguard-verdict-title {
-  font-size: 14px !important;
+  font-size: 19px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.5px !important;
+  letter-spacing: 0.8px !important;
+  line-height: 1.1 !important;
 }
 
-.status-phish .phishguard-verdict-title { color: #F87171 !important; }
-.status-suspicious .phishguard-verdict-title { color: #FBBF24 !important; }
-.status-safe .phishguard-verdict-title { color: #34D399 !important; }
+.status-phish .phishguard-verdict-title { 
+  color: #F87171 !important; 
+  text-shadow: 0 0 16px rgba(239, 68, 68, 0.35) !important; 
+}
+.status-suspicious .phishguard-verdict-title { 
+  color: #FBBF24 !important; 
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.35) !important; 
+}
+.status-safe .phishguard-verdict-title { 
+  color: #34D399 !important; 
+  text-shadow: 0 0 16px rgba(16, 185, 129, 0.35) !important; 
+}
 
-.phishguard-score-pill {
-  font-size: 11px !important;
+.phishguard-risk-tag {
+  font-size: 10px !important;
   font-weight: 700 !important;
-  padding: 3px 8px !important;
-  border-radius: 12px !important;
-  background: rgba(0, 0, 0, 0.3) !important;
-  color: #E2E8F0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  color: #94A3B8 !important;
+  margin-top: 4px !important;
+}
+
+/* Circular Score Progress Gauge */
+.phishguard-score-gauge {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.phishguard-score-gauge-inner {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  background: #0F172A !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.phishguard-gauge-num {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  color: #F8FAFC !important;
+}
+
+.phishguard-gauge-max {
+  font-size: 7.5px !important;
+  color: #94A3B8 !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
 }
 
 /* Section Containers */
 .phishguard-section {
-  margin-bottom: 12px !important;
+  margin-bottom: 15px !important;
 }
 
 .phishguard-section-title {
   font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.6px !important;
+  letter-spacing: 0.7px !important;
   color: #94A3B8 !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 7px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
 }
 
 .phishguard-explanation-text {
-  font-size: 12.5px !important;
-  line-height: 1.45 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
   color: #E2E8F0 !important;
   background: #1E293B !important;
-  padding: 9px 11px !important;
-  border-radius: 8px !important;
-  border: 1px solid #334155 !important;
+  padding: 10px 12px !important;
+  border-radius: 9px !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 .phishguard-recommendation-box {
-  margin-top: 6px !important;
+  margin-top: 7px !important;
   font-size: 11.5px !important;
   color: #CBD5E1 !important;
-  background: rgba(99, 102, 241, 0.1) !important;
-  border-left: 3px solid #6366F1 !important;
-  padding: 7px 9px !important;
-  border-radius: 4px !important;
-  line-height: 1.4 !important;
+  background: rgba(99, 102, 241, 0.12) !important;
+  border-left: 3.5px solid #6366F1 !important;
+  padding: 8px 10px !important;
+  border-radius: 5px !important;
+  line-height: 1.45 !important;
 }
 
-/* Evidence Flags */
+/* Evidence Flags List */
 .phishguard-evidence-list {
   display: flex !important;
   flex-direction: column !important;
-  gap: 5px !important;
-  max-height: 160px !important;
+  gap: 7px !important;
+  max-height: 170px !important;
   overflow-y: auto !important;
+  padding-right: 2px !important;
+}
+
+.phishguard-evidence-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.phishguard-evidence-list::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
 }
 
 .phishguard-evidence-item {
   display: flex !important;
-  align-items: flex-start !important;
-  gap: 7px !important;
+  flex-direction: column !important;
+  gap: 4px !important;
   font-size: 11.5px !important;
-  line-height: 1.35 !important;
+  line-height: 1.4 !important;
   background: #1E293B !important;
-  padding: 6px 9px !important;
-  border-radius: 6px !important;
+  padding: 8px 11px !important;
+  border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.phishguard-evidence-flagged {
+  border-left: 3.5px solid #EF4444 !important;
+}
+
+.phishguard-evidence-pass {
+  border-left: 3.5px solid #10B981 !important;
+}
+
+.phishguard-evidence-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.phishguard-evidence-name {
+  font-weight: 700 !important;
+  color: #F1F5F9 !important;
+  font-size: 11.5px !important;
 }
 
 .phishguard-evidence-pts {
-  font-size: 10px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
-  background: #EF4444 !important;
-  color: #FFFFFF !important;
-  padding: 1px 5px !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+  color: #FCA5A5 !important;
+  padding: 1px 6px !important;
   border-radius: 4px !important;
   white-space: nowrap !important;
 }
 
-.phishguard-evidence-pass {
-  color: #34D399 !important;
+.pass-pts {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  color: #6EE7B7 !important;
 }
 
-.phishguard-evidence-icon {
-  font-weight: bold !important;
-  color: #34D399 !important;
+.phishguard-evidence-desc {
+  color: #CBD5E1 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.38 !important;
 }
 
-/* Category score pills */
-.phishguard-pills-row {
+/* Category Breakdown Grid */
+.phishguard-chips-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+
+.phishguard-cat-chip {
   display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 5px !important;
-}
-
-.phishguard-pill {
-  font-size: 10px !important;
-  padding: 3px 7px !important;
-  border-radius: 4px !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 6px 9px !important;
+  border-radius: 7px !important;
   background: #1E293B !important;
-  border: 1px solid #334155 !important;
-  color: #94A3B8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-.pill-alert {
+.cat-chip-alert {
   border-color: rgba(245, 158, 11, 0.4) !important;
-  color: #FBBF24 !important;
+  background: rgba(245, 158, 11, 0.08) !important;
 }
 
-.pill-clean {
+.cat-chip-alert .phishguard-cat-score {
+  color: #FBBF24 !important;
+  font-weight: 800 !important;
+}
+
+.cat-chip-clean {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.phishguard-cat-label {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: #CBD5E1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.phishguard-cat-score {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
   color: #94A3B8 !important;
 }
 
@@ -356,11 +516,12 @@
 .phishguard-footer {
   display: flex !important;
   justify-content: space-between !important;
+  align-items: center !important;
   font-size: 10px !important;
   color: #64748B !important;
-  margin-top: 10px !important;
-  padding-top: 8px !important;
-  border-top: 1px solid #334155 !important;
+  margin-top: 14px !important;
+  padding-top: 9px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Error State */

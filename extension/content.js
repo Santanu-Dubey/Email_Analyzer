@@ -490,7 +490,9 @@
    * @param {string} scanMethod - 'API' or 'DOM'
    */
   function renderResultBadge(result, emailData, scanMethod = 'DOM') {
-    removeResultBadge();
+    // Immediately clear existing badge
+    const existing = document.getElementById(BADGE_ID);
+    if (existing) existing.remove();
 
     const badge = document.createElement('div');
     badge.id = BADGE_ID;
@@ -499,25 +501,30 @@
     // Color theme & status icon
     let statusIcon = '🛡️';
     let statusThemeClass = 'status-safe';
+    let scoreColor = '#10B981';
+
     if (result.status === 'Phishing') {
       statusIcon = '🚨';
       statusThemeClass = 'status-phish';
+      scoreColor = '#EF4444';
     } else if (result.status === 'Suspicious') {
       statusIcon = '⚠️';
       statusThemeClass = 'status-suspicious';
+      scoreColor = '#F59E0B';
     }
 
-    // Build evidence flag checklist items
+    // Build evidence flag checklist items with enhanced hierarchy
     let reasonsHtml = '';
     if (result.flagged && result.flagged.length > 0) {
       reasonsHtml = result.flagged
         .map(
           (f) => `
-          <div class="phishguard-evidence-item">
-            <span class="phishguard-evidence-pts">+${f.weight || 0} pts</span>
-            <div class="phishguard-evidence-desc">
-              <strong>${escapeHtml(f.check || 'Security Check')}:</strong> ${escapeHtml(f.explanation || '')}
+          <div class="phishguard-evidence-item phishguard-evidence-flagged">
+            <div class="phishguard-evidence-header">
+              <span class="phishguard-evidence-name">${escapeHtml(f.check || 'Security Check')}</span>
+              <span class="phishguard-evidence-pts">+${f.weight || 0} pts</span>
             </div>
+            <div class="phishguard-evidence-desc">${escapeHtml(f.explanation || '')}</div>
           </div>
         `
         )
@@ -525,24 +532,38 @@
     } else {
       reasonsHtml = `
         <div class="phishguard-evidence-item phishguard-evidence-pass">
-          <span class="phishguard-evidence-icon">✓</span>
+          <div class="phishguard-evidence-header">
+            <span class="phishguard-evidence-name">✓ Clean Security Inspection</span>
+            <span class="phishguard-evidence-pts pass-pts">0 pts</span>
+          </div>
           <div class="phishguard-evidence-desc">
-            No malicious indicators, domain typosquatting, or deceptive links detected.
+            No malicious threat indicators, domain spoofing, or deceptive links detected.
           </div>
         </div>
       `;
     }
 
-    // Build category scores breakdown pills
+    // Category icons mapping
+    const categoryIcons = {
+      'Authentication': '🔒',
+      'Identity & Sender': '👤',
+      'Content & Pressure': '⚠️',
+      'Links & Threat Intel': '🔗'
+    };
+
+    // Build category scores breakdown stat chips
     const cats = result.category_scores || {};
     const categoryPillsHtml = Object.entries(cats)
-      .map(
-        ([name, score]) => `
-        <span class="phishguard-pill ${score > 0 ? 'pill-alert' : 'pill-clean'}">
-          ${escapeHtml(name)}: ${score > 0 ? `+${score}` : '0'}
-        </span>
-      `
-      )
+      .map(([name, score]) => {
+        const icon = categoryIcons[name] || '📊';
+        const isAlert = score > 0;
+        return `
+          <div class="phishguard-cat-chip ${isAlert ? 'cat-chip-alert' : 'cat-chip-clean'}">
+            <span class="phishguard-cat-label">${icon} ${escapeHtml(name)}</span>
+            <span class="phishguard-cat-score">${isAlert ? `+${score}` : '0'}</span>
+          </div>
+        `;
+      })
       .join('');
 
     // Method indicator UI badge and footer text
@@ -561,17 +582,18 @@
 
     const senderDisplay = result.meta?.sender || emailData.sender || 'Sender';
     const linksCount = result.meta?.links_scanned ?? emailData.links.length;
+    const safeScore = Math.min(100, Math.max(0, result.score || 0));
 
     badge.innerHTML = `
       <div class="phishguard-card-header">
         <div class="phishguard-title-group">
           <span class="phishguard-badge-icon">${statusIcon}</span>
-          <div>
+          <div class="phishguard-header-text">
             <div class="phishguard-badge-title">PhishGuard Forensics</div>
-            <div class="phishguard-badge-subtitle">${escapeHtml(senderDisplay)}</div>
+            <div class="phishguard-badge-subtitle" title="${escapeHtml(senderDisplay)}">${escapeHtml(senderDisplay)}</div>
           </div>
         </div>
-        <button class="phishguard-close-btn" id="phishguard-close-btn" title="Close Panel">✕</button>
+        <button class="phishguard-close-btn" id="phishguard-close-btn" title="Close Panel" aria-label="Close">✕</button>
       </div>
 
       <div class="phishguard-method-row">
@@ -579,8 +601,16 @@
       </div>
 
       <div class="phishguard-score-banner ${statusThemeClass}">
-        <div class="phishguard-verdict-title">${escapeHtml(result.status.toUpperCase())}</div>
-        <div class="phishguard-score-pill">Threat Score: ${result.score}/100 (${escapeHtml(result.risk)})</div>
+        <div class="phishguard-verdict-col">
+          <div class="phishguard-verdict-title">${escapeHtml(result.status.toUpperCase())}</div>
+          <div class="phishguard-risk-tag">${escapeHtml(result.risk || 'LOW')} RISK</div>
+        </div>
+        <div class="phishguard-score-gauge" style="background: conic-gradient(${scoreColor} ${safeScore * 3.6}deg, rgba(255, 255, 255, 0.08) 0deg);">
+          <div class="phishguard-score-gauge-inner">
+            <span class="phishguard-gauge-num">${safeScore}</span>
+            <span class="phishguard-gauge-max">/100</span>
+          </div>
+        </div>
       </div>
 
       <div class="phishguard-section">
@@ -606,7 +636,7 @@
 
       <div class="phishguard-section">
         <div class="phishguard-section-title">📊 Category Breakdown</div>
-        <div class="phishguard-pills-row">
+        <div class="phishguard-chips-grid">
           ${categoryPillsHtml}
         </div>
       </div>
@@ -619,7 +649,7 @@
 
     document.body.appendChild(badge);
 
-    // Bind close event
+    // Bind close event with animated exit
     const closeBtn = badge.querySelector('#phishguard-close-btn');
     if (closeBtn) {
       closeBtn.addEventListener('click', removeResultBadge);
@@ -630,7 +660,8 @@
    * Renders a friendly error badge when the Python backend is not running.
    */
   function renderErrorBadge(err) {
-    removeResultBadge();
+    const existing = document.getElementById(BADGE_ID);
+    if (existing) existing.remove();
 
     const badge = document.createElement('div');
     badge.id = BADGE_ID;
@@ -645,7 +676,7 @@
             <div class="phishguard-badge-subtitle">Backend Server Offline</div>
           </div>
         </div>
-        <button class="phishguard-close-btn" id="phishguard-close-btn" title="Close">✕</button>
+        <button class="phishguard-close-btn" id="phishguard-close-btn" title="Close" aria-label="Close">✕</button>
       </div>
 
       <div class="phishguard-error-body">
@@ -674,7 +705,13 @@
   function removeResultBadge() {
     const existing = document.getElementById(BADGE_ID);
     if (existing) {
-      existing.remove();
+      if (existing.classList.contains('phishguard-badge-closing')) return;
+      existing.classList.add('phishguard-badge-closing');
+      setTimeout(() => {
+        if (existing && existing.parentNode) {
+          existing.remove();
+        }
+      }, 200);
     }
   }
 
